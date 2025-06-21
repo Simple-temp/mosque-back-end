@@ -1,11 +1,16 @@
 import express from "express";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
+import twilio from "twilio";
 import FixedUser from "../models/FixedUser.js"
 
 const fixUserRoute = express.Router();
 
 const JWT_SECRET = "your_jwt_secret"; 
+
+const accountSid = process.env.TWILIO_ACCOUNT_SID;
+const authToken = process.env.TWILIO_AUTH_TOKEN;
+const client = twilio(accountSid, authToken);
 
 // ✅ GET fixed user by ID
 fixUserRoute.get("/:id", async (req, res) => {
@@ -73,7 +78,6 @@ fixUserRoute.post("/", async (req, res) => {
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
-
     const token = jwt.sign({ name, email, number, role }, JWT_SECRET, { expiresIn: "7d" });
 
     const newUser = new FixedUser({
@@ -87,24 +91,66 @@ fixUserRoute.post("/", async (req, res) => {
     });
 
     const savedUser = await newUser.save();
+
+    // Send SMS
+    // await client.messages.create({
+    //   body: `Hi ${name}, your account has been successfully created.`,
+    //   from: process.env.TWILIO_PHONE_NUMBER,
+    //   to: `+88${number}`
+    // });
+
     res.status(201).json(savedUser);
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
 });
 
-// Create
-fixUserRoute.post("/", async (req, res) => {
-  try {
-    const newUser = new FixedUser(req.body);
-    const savedUser = await newUser.save();
-    res.status(201).json(savedUser);
-  } catch (err) {
-    res.status(400).json({ error: err.message });
-  }
-});
+// fixUserRoute.post("/", async (req, res) => {
+//   try {
+//     const { name, email, number, address, password, role } = req.body;
+
+//     if (!password || password.length < 6) {
+//       return res.status(400).json({ error: "Password must be at least 6 characters" });
+//     }
+
+//     const hashedPassword = await bcrypt.hash(password, 10);
+
+//     const token = jwt.sign({ name, email, number, role }, JWT_SECRET, { expiresIn: "7d" });
+
+//     const newUser = new FixedUser({
+//       name,
+//       email,
+//       number,
+//       role,
+//       address,
+//       password: hashedPassword,
+//       token,
+//     });
+
+//     const savedUser = await newUser.save();
+//     res.status(201).json(savedUser);
+//   } catch (err) {
+//     res.status(400).json({ error: err.message });
+//   }
+// });
+
+
+
+
+// // Create
+// fixUserRoute.post("/", async (req, res) => {
+//   try {
+//     const newUser = new FixedUser(req.body);
+//     const savedUser = await newUser.save();
+//     res.status(201).json(savedUser);
+//   } catch (err) {
+//     res.status(400).json({ error: err.message });
+//   }
+// });
 
 // Read all
+
+
 fixUserRoute.get("/", async (req, res) => {
   try {
     const users = await FixedUser.find();
