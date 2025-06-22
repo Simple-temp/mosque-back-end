@@ -2,8 +2,9 @@ import express from "express";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import twilio from "twilio";
-import FixedUser from "../models/FixedUser.js"
+import FixedUser from "../models/FixedUser.js";
 import { verifyToken } from "../utils/verifyToken.js";
+import Collection from "../models/Collection.js";
 
 const fixUserRoute = express.Router();
 
@@ -119,13 +120,21 @@ fixUserRoute.get("/", async (req, res) => {
   }
 });
 
-// Delete
+// Delete and also delete user record..
+
 fixUserRoute.delete("/:id", async (req, res) => {
+  const fixedUserId = req.params.id;
+
   try {
-    await FixedUser.findByIdAndDelete(req.params.id);
-    res.json({ message: "User deleted" });
-  } catch (err) {
-    res.status(400).json({ error: err.message });
+    // Delete all user collections submitted by this fixed user
+    await Collection.deleteMany({ submittedByFixedUser: fixedUserId });
+
+    // Delete the fixed user
+    await FixedUser.findByIdAndDelete(fixedUserId);
+
+    res.status(200).json({ message: "Fixed user and associated collections deleted." });
+  } catch (error) {
+    res.status(500).json({ message: "Error deleting user or collections", error });
   }
 });
 
