@@ -58,7 +58,7 @@ adminRoute.post("/create", async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // Generate token
-    const token = jwt.sign({ name, role, email }, JWT_SECRET, { expiresIn: "1d" });
+    const token = jwt.sign({ name, role, email, number, password }, JWT_SECRET, { expiresIn: "1d" });
 
     const newAdmin = new AdminUser({
       name,
@@ -94,18 +94,19 @@ adminRoute.post("/login", async (req, res) => {
     }
 
     // Compare password
-    const isMatch = await bcrypt.compare(password, user.password);
+    const isMatch = await bcrypt.compareSync(password, user.password);
     if (!isMatch) {
       return res.status(401).json({ message: "Invalid number or password" });
     }
+        console.log(isMatch)
 
     // Generate new token (optional, or use existing one)
-    const token = jwt.sign({ name: user.name, role: user.role, email: user.email }, JWT_SECRET, {
+    const token = jwt.sign({ name: user.name, role: user.role, email: user.email, password: user.password, number: user.number }, JWT_SECRET, {
       expiresIn: "1d",
     });
 
-    // Optionally update token in DB
-    user.token = token;
+    // // Optionally update token in DB
+    // user.token = token;
     await user.save();
 
     res.status(200).json({
@@ -135,22 +136,8 @@ adminRoute.get("/", async (req, res) => {
   }
 });
 
-// Update admin
-adminRoute.put("/:id",verifyToken, async (req, res) => {
-  try {
-    const updated = await AdminUser.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      { new: true }
-    );
-    res.status(200).json(updated);
-  } catch (err) {
-    res.status(500).json({ message: "Update failed", err });
-  }
-});
-
 // Delete admin
-adminRoute.delete("/:id", verifyToken, async (req, res) => {
+adminRoute.delete("/:id", async (req, res) => {
   try {
     await AdminUser.findByIdAndDelete(req.params.id);
     res.status(200).json({ message: "Admin deleted" });
