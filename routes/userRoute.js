@@ -45,12 +45,12 @@ router.post("/add-user", async (req, res) => {
     }
 
     // Check for duplicate number/email
-    const existing = await Collection.findOne({
-      $or: [{ number }, { email }],
-    });
-    if (existing) {
-      return res.status(409).json({ message: "Number or email already exists" });
-    }
+    // const existing = await Collection.findOne({
+    //   $or: [{ number }, { email }],
+    // });
+    // if (existing) {
+    //   return res.status(409).json({ message: "Number or email already exists" });
+    // }
 
     // Build user payload
     const userPayload = {
