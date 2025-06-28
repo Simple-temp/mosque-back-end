@@ -22,6 +22,7 @@ const fixedUserCollectionSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "FixedUser",
     },
+    isApproved: { type: Boolean, default: false },
 }, {
     timestamps: true // adds createdAt and updatedAt
 });

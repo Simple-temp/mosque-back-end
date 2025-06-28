@@ -35,4 +35,20 @@ fixeduserCollectionRoute.delete("/:id", async (req, res) => {
   }
 });
 
+// PATCH: Update isApproved to true for all submittedByFixedUser entries
+fixeduserCollectionRoute.put("/submit/approve/:fixedUserId", async (req, res) => {
+  try {
+    const { fixedUserId } = req.params;
+    console.log(fixedUserId)
+    await fixedUserCollection.updateMany(
+      { submittedByFixedUser: fixedUserId, isApproved: false },
+      { $set: { isApproved: true } }
+    );
+    res.json({ message: "Entries approved successfully." });
+  } catch (error) {
+    res.status(500).json({ message: "Approval failed" });
+  }
+});
+
+
 export default fixeduserCollectionRoute;
